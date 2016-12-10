@@ -2,7 +2,7 @@
 module Lib
     ( patternCount,
       increment,
-      histogram,
+--      histogram,
       mostFrequentKMers
     ) where
 
@@ -22,8 +22,8 @@ patternCount pattern text = _patternCount pattern text 0
 increment :: [Char] -> (M.Map [Char] Int) -> (M.Map [Char] Int)
 increment k m = M.insert k ((M.findWithDefault 0 k m ) +1) m
 
-histogram :: [[Char]] -> (M.Map [Char] Int)
-histogram l = increment
+--histogram :: [[Char]] -> (M.Map [Char] Int)
+--histogram l = increment
 
 mostFrequentKMers :: Int -> [Char] -> [[Char]]
 mostFrequentKMers k text = ["CATG","GCAT"]
