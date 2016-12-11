@@ -4,6 +4,8 @@ module Lib
       increment,
       histogram,
       splitIntoKMers,
+      histogramMax,
+      kMersHistogram,
       mostFrequentKMers
     ) where
 
@@ -43,8 +45,16 @@ splitIntoKMers' text k r
 splitIntoKMers :: [Char] -> Int -> [[Char]]
 splitIntoKMers text k = splitIntoKMers' text k []
 
-mostFrequentKMers :: Int -> [Char] -> [[Char]]
-mostFrequentKMers text k = histogram $ splitIntoKMers text k
+pickMax' :: Int -> Int -> Int
+pickMax' a b
+   | a > b = a
+   | otherwise = b
 
+histogramMax :: (M.Map [Char] Int) -> Int
+histogramMax m = M.fold pickMax' 0 m
 
---["CATG","GCAT"]
+kMersHistogram :: [Char] -> Int -> (M.Map [Char] Int)
+kMersHistogram text k = histogram $ splitIntoKMers text k
+
+mostFrequentKMers ::  [Char] -> Int -> [[Char]]
+mostFrequentKMers text k = M.keys $ M.filter (\v -> v == (histogramMax $ kMersHistogram text k)) (kMersHistogram text k)

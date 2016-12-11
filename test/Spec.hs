@@ -1,7 +1,16 @@
 import Test.Hspec
 import Control.Exception (evaluate)
 import qualified Data.Map as M
-import Lib (patternCount, increment, histogram, splitIntoKMers, mostFrequentKMers)
+import Lib
+         (
+            patternCount,
+            increment,
+            histogram,
+            splitIntoKMers,
+            kMersHistogram,
+            histogramMax,
+            mostFrequentKMers
+         )
 
 
 main :: IO ()
@@ -57,8 +66,25 @@ main = hspec $ do
          (length l) `shouldBe` (((length text) -k +1) :: Int)
          l !! 0  `shouldBe` ("ACGT" :: [Char])
 
+   describe "kMersHistogram" $ do
+      it "should construct a histogram of the k-mers in the text" $ do
+         let text = "AAAABBBAAA"
+         let k = 3
+         let m = kMersHistogram text k
+         (length m) `shouldBe` (6 :: Int)
+         m M.! "AAA" `shouldBe` (3 :: Int)
+         m M.! "BBB" `shouldBe` (1 :: Int)
+
+   describe "kMersHistogram" $ do
+      it "should construct a histogram of the k-mers in the text" $ do
+         let text = "AAAABBBAAA"
+         let k = 3
+         let m = histogramMax $ kMersHistogram text k
+         m `shouldBe` (3 :: Int)
+
    describe "mostFrequentKMers" $ do
       it "returns the list of most frequenct k-mers in the text" $ do
          let text = "ACGTTGCATGTCGCATGATGCATGAGAGCT"
          let k = 4
-         (mostFrequentKMers k text) `shouldBe` (["CATG","GCAT"] :: [[Char]])
+         let mfk = mostFrequentKMers text k
+         mfk `shouldBe` (["CATG","GCAT"] :: [[Char]])
