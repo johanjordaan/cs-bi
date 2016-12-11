@@ -61,17 +61,17 @@ kMersHistogram text k = histogram $ splitIntoKMers text k
 mostFrequentKMers ::  [Char] -> Int -> [[Char]]
 mostFrequentKMers text k = M.keys $ M.filter (\v -> v == (histogramMax $ kMersHistogram text k)) (kMersHistogram text k)
 
-
+complimentOne :: Char -> [Char]
+complimentOne x
+   | x == 'C' = "G"
+   | x == 'G' = "C"
+   | x == 'T' = "A"
+   | x == 'A' = "T"
+   | otherwise = "?"
 
 compliment :: [Char] -> [Char]
 compliment [] = []
-compliment x
-   | x == "C" = "G"
-   | x == "G" = "C"
-   | x == "T" = "A"
-   | x == "A" = "T"
-   | otherwise = "?"
-compliment (x:xs) =  compliment x : []
+compliment (x:xs) =  complimentOne x ++ compliment xs
 
 
 reverseCompliment :: [Char] ->[Char]

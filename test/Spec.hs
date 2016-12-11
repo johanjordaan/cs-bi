@@ -92,13 +92,13 @@ main = hspec $ do
          mfk `shouldBe` (["CATG","GCAT"] :: [[Char]])
 
    describe "compliment" $ do
-      it "should retur the reverse compliment of the sequence" $ do
+      it "should return the compliment of the sequence" $ do
          let s = "TTGTGTC"
          let rc = compliment s
          rc `shouldBe` ("AACACAG" :: [Char])
 
    describe "reverseCompliment" $ do
-      it "should retur the reverse compliment of the sequence" $ do
+      it "should return the reverse compliment of the sequence" $ do
          let s = "TTGTGTC"
          let rc = reverseCompliment s
          rc `shouldBe` ("GACACAA" :: [Char])
