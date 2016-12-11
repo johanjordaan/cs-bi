@@ -9,7 +9,9 @@ import Lib
             splitIntoKMers,
             kMersHistogram,
             histogramMax,
-            mostFrequentKMers
+            mostFrequentKMers,
+            compliment,
+            reverseCompliment
          )
 
 
@@ -88,3 +90,15 @@ main = hspec $ do
          let k = 4
          let mfk = mostFrequentKMers text k
          mfk `shouldBe` (["CATG","GCAT"] :: [[Char]])
+
+   describe "compliment" $ do
+      it "should retur the reverse compliment of the sequence" $ do
+         let s = "TTGTGTC"
+         let rc = compliment s
+         rc `shouldBe` ("AACACAG" :: [Char])
+
+   describe "reverseCompliment" $ do
+      it "should retur the reverse compliment of the sequence" $ do
+         let s = "TTGTGTC"
+         let rc = reverseCompliment s
+         rc `shouldBe` ("GACACAA" :: [Char])

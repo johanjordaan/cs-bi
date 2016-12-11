@@ -6,7 +6,9 @@ module Lib
       splitIntoKMers,
       histogramMax,
       kMersHistogram,
-      mostFrequentKMers
+      mostFrequentKMers,
+      compliment,
+      reverseCompliment
     ) where
 
 import Data.String.Utils
@@ -58,3 +60,19 @@ kMersHistogram text k = histogram $ splitIntoKMers text k
 
 mostFrequentKMers ::  [Char] -> Int -> [[Char]]
 mostFrequentKMers text k = M.keys $ M.filter (\v -> v == (histogramMax $ kMersHistogram text k)) (kMersHistogram text k)
+
+
+
+compliment :: [Char] -> [Char]
+compliment [] = []
+compliment x
+   | x == "C" = "G"
+   | x == "G" = "C"
+   | x == "T" = "A"
+   | x == "A" = "T"
+   | otherwise = "?"
+compliment (x:xs) =  compliment x : []
+
+
+reverseCompliment :: [Char] ->[Char]
+reverseCompliment s = reverse $ compliment s
