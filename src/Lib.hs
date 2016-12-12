@@ -8,7 +8,9 @@ module Lib
       kMersHistogram,
       mostFrequentKMers,
       compliment,
-      reverseCompliment
+      reverseCompliment,
+      patternToNumber,
+      numberToPattern
     ) where
 
 import Data.String.Utils
@@ -49,8 +51,8 @@ splitIntoKMers text k = splitIntoKMers' text k []
 
 pickMax' :: Int -> Int -> Int
 pickMax' a b
-   | a > b = a
-   | otherwise = b
+  | a > b = a
+  | otherwise = b
 
 histogramMax :: (M.Map [Char] Int) -> Int
 histogramMax m = M.fold pickMax' 0 m
@@ -63,16 +65,29 @@ mostFrequentKMers text k = M.keys $ M.filter (\v -> v == (histogramMax $ kMersHi
 
 complimentOne :: Char -> [Char]
 complimentOne x
-   | x == 'C' = "G"
-   | x == 'G' = "C"
-   | x == 'T' = "A"
-   | x == 'A' = "T"
-   | otherwise = "?"
+  | x == 'A' = "T"
+  | x == 'T' = "A"
+  | x == 'C' = "G"
+  | x == 'G' = "C"
 
 compliment :: [Char] -> [Char]
 compliment [] = []
 compliment (x:xs) =  complimentOne x ++ compliment xs
 
-
 reverseCompliment :: [Char] ->[Char]
 reverseCompliment s = reverse $ compliment s
+
+patternToNumber' :: [Char] -> Int -> Int -> Int
+patternToNumber' [] _ _ = 0
+patternToNumber' (x:[]) k c
+  | x == 'A' = 4^(k-c) * 0
+  | x == 'T' = 4^(k-c) * 1
+  | x == 'G' = 4^(k-c) * 2
+  | x == 'C' = 4^(k-c) * 3
+patternToNumber' (x:xs) k c = (patternToNumber' [x] k c) + (patternToNumber' xs k (c-1))
+
+patternToNumber :: [Char] -> Int
+patternToNumber p = patternToNumber' p (length p) ((length p)-1)
+
+numberToPattern :: Int -> Int -> [Char]
+numberToPattern n k = "ATGCAA"

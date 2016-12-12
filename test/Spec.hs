@@ -11,7 +11,9 @@ import Lib
             histogramMax,
             mostFrequentKMers,
             compliment,
-            reverseCompliment
+            reverseCompliment,
+            patternToNumber,
+            numberToPattern
          )
 
 
@@ -102,3 +104,18 @@ main = hspec $ do
          let s = "TTGTGTC"
          let rc = reverseCompliment s
          rc `shouldBe` ("GACACAA" :: [Char])
+
+
+   describe "patternToNumber" $ do
+      it "should return the number for the pattern" $ do
+        let p = "ATGCAA"
+        let n = patternToNumber p
+        n `shouldBe` (912 :: Int)
+
+
+   describe "numberToPattern" $ do
+     it "should return the pattern given the number and k" $ do
+       let n = 912
+       let k = 6
+       let p = numberToPattern n k
+       p `shouldBe` ("ATGCAA" :: [Char])
