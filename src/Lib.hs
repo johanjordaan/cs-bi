@@ -89,5 +89,20 @@ patternToNumber' (x:xs) k c = (patternToNumber' [x] k c) + (patternToNumber' xs 
 patternToNumber :: [Char] -> Int
 patternToNumber p = patternToNumber' p (length p) ((length p)-1)
 
-numberToPattern :: Int -> Int -> [Char]
-numberToPattern n k = "ATGCAA"
+numberToPattern'' :: Integer -> Char
+numberToPattern'' n
+  | n == 0 = 'A'
+  | n == 1 = 'C'
+  | n == 2 = 'G'
+  | n == 3 = 'T'
+
+numberToPattern' :: Integer -> Int -> Int -> [Char]
+numberToPattern' n k i
+  | k==i = [numberToPattern'' n]
+  | otherwise =
+      [numberToPattern'' $ toInteger $ floor (fromIntegral n/ fromIntegral 4^(k-i))]
+      ++ numberToPattern' (fromIntegral n `mod` fromIntegral 4^(k-i)) k (i+1)
+
+
+numberToPattern :: Integer -> Int -> [Char]
+numberToPattern n k = numberToPattern' n k 1
