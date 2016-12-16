@@ -13,7 +13,8 @@ import Lib
             compliment,
             reverseCompliment,
             patternToNumber,
-            numberToPattern
+            numberToPattern,
+            frequencyArray
          )
 
 
@@ -79,12 +80,13 @@ main = hspec $ do
          m M.! "AAA" `shouldBe` (3 :: Int)
          m M.! "BBB" `shouldBe` (1 :: Int)
 
-   describe "kMersHistogram" $ do
-      it "should construct a histogram of the k-mers in the text" $ do
+   describe "histogramMax" $ do
+       it "should return the histogram items with the highest frequency" $ do
          let text = "AAAABBBAAA"
          let k = 3
          let m = histogramMax $ kMersHistogram text k
          m `shouldBe` (3 :: Int)
+
 
    describe "mostFrequentKMers" $ do
       it "returns the list of most frequenct k-mers in the text" $ do
@@ -119,3 +121,12 @@ main = hspec $ do
        let k = 6
        let p = numberToPattern n k
        p `shouldBe` ("ATGCAA" :: [Char])
+
+
+   describe "frequencyArray" $ do
+     it "should return a frequency arry for the kmers" $ do
+       let t = "ACGCGGCTCTGAAA"
+       let k = 2
+       let fa = frequencyArray t k
+       (length fa) `shouldBe` (16 :: Int)
+       fa[0] `shouldBe` (2 :: Int)

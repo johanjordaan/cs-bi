@@ -10,7 +10,9 @@ module Lib
       compliment,
       reverseCompliment,
       patternToNumber,
-      numberToPattern
+      numberToPattern,
+      expand,
+      frequencyArray
     ) where
 
 import Data.String.Utils
@@ -35,7 +37,6 @@ histogram' (x:xs) m = histogram' xs (increment x m)
 
 histogram :: [[Char]] -> (M.Map [Char] Int)
 histogram l = histogram' l M.empty
-
 
 drop' k text = C.unpack $ C.drop (fromIntegral k) $ C.pack text
 take' k text = C.unpack $ C.take (fromIntegral k) $ C.pack text
@@ -103,6 +104,17 @@ numberToPattern' n k i
       [numberToPattern'' $ toInteger $ floor (fromIntegral n/ fromIntegral 4^(k-i))]
       ++ numberToPattern' (fromIntegral n `mod` fromIntegral 4^(k-i)) k (i+1)
 
-
 numberToPattern :: Integer -> Int -> [Char]
 numberToPattern n k = numberToPattern' n k 1
+
+expand' ::  Integer -> Int -> (M.Map [Char] Int) -> (M.Map [Char] Int)
+expand' n k m
+  | n == toInteger 4^k-1 = M.insert (numberToPattern n k) 0 m
+  | otherwise = M.insert (numberToPattern n k) 0 (expand' (n+1) k m)
+
+expand :: Int -> (M.Map [Char] Int)
+expand k = expand' 0 k M.empty
+
+
+frequencyArray :: [Char] -> Int -> [Int]
+frequencyArray text k = M.elems $ histogram' (splitIntoKMers text k) (expand k) 
