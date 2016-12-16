@@ -12,7 +12,8 @@ module Lib
       patternToNumber,
       numberToPattern,
       expand,
-      frequencyArray
+      frequencyArray--,
+      --patternPositions
     ) where
 
 import Data.String.Utils
@@ -115,6 +116,7 @@ expand' n k m
 expand :: Int -> (M.Map [Char] Int)
 expand k = expand' 0 k M.empty
 
-
 frequencyArray :: [Char] -> Int -> [Int]
-frequencyArray text k = M.elems $ histogram' (splitIntoKMers text k) (expand k) 
+frequencyArray text k = M.elems $ histogram' (splitIntoKMers text k) (expand k)
+
+--patternPositions :: [Char] -> [Char] -> [Int]

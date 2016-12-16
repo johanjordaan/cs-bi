@@ -14,7 +14,8 @@ import Lib
             reverseCompliment,
             patternToNumber,
             numberToPattern,
-            frequencyArray
+            frequencyArray--,
+            --patternPositions
          )
 
 
@@ -130,3 +131,11 @@ main = hspec $ do
        let fa = frequencyArray t k
        (length fa) `shouldBe` (16 :: Int)
        fa[0] `shouldBe` (2 :: Int)
+
+--   describe "patternPositions" $ do
+--     it "should return an array with the staring positions of the given pattern" $ do
+--       let t = "GATATATGCATATACTT"
+--       let p = "ATAT"
+--       let fa = frequencyArray t k
+--       (length fa) `shouldBe` (16 :: Int)
+--       fa[0] `shouldBe` (2 :: Int)
