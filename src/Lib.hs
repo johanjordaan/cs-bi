@@ -7,18 +7,30 @@ module Lib
       histogramMax,
       kMersHistogram,
       mostFrequentKMers,
+      frequentKMers,
       compliment,
       reverseCompliment,
       patternToNumber,
       numberToPattern,
       expand,
-      frequencyArray--,
-      --patternPositions
+      frequencyArray,
+      patternPositions,
+      showArray
     ) where
 
 import Data.String.Utils
 import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.Map as M
+
+import Data.List (intercalate)
+
+import Data.Array
+import Text.Regex.Base
+import Text.Regex.PCRE
+
+
+showArray :: Show a => [a] -> String
+showArray = intercalate " " . map show
 
 patternCount' :: [Char] -> [Char] -> Int -> Int
 patternCount' pattern [] a = a
@@ -64,6 +76,10 @@ kMersHistogram text k = histogram $ splitIntoKMers text k
 
 mostFrequentKMers ::  [Char] -> Int -> [[Char]]
 mostFrequentKMers text k = M.keys $ M.filter (\v -> v == (histogramMax $ kMersHistogram text k)) (kMersHistogram text k)
+
+frequentKMers ::  [Char] -> Int -> Int -> [[Char]]
+frequentKMers text k m = M.keys $ M.filter (\v -> v >= m ) (kMersHistogram text k)
+
 
 complimentOne :: Char -> [Char]
 complimentOne x
@@ -119,4 +135,11 @@ expand k = expand' 0 k M.empty
 frequencyArray :: [Char] -> Int -> [Int]
 frequencyArray text k = M.elems $ histogram' (splitIntoKMers text k) (expand k)
 
---patternPositions :: [Char] -> [Char] -> [Int]
+patternPositions' :: [Char] -> [Char] -> [Int] -> Int -> [Int]
+patternPositions' text pattern acc pos
+  | (length text) < (length pattern) = reverse acc
+  | take (length pattern) text == pattern = patternPositions' (drop' 1 text) pattern (pos:acc) (pos+1)
+  | otherwise = patternPositions' (drop' 1 text) pattern acc (pos+1)
+
+patternPositions :: [Char] -> [Char] -> [Int]
+patternPositions text pattern = map (\i -> fst i) (getAllMatches $ (text =~ ("(?=("++pattern++")).") :: AllMatches [] (MatchOffset, MatchLength)))

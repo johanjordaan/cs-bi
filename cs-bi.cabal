@@ -20,7 +20,9 @@ library
                      , MissingH
                      , bytestring
                      , containers
-                     , regex-compat-tdfa
+                     , regex-pcre
+                     , regex-base
+                     , array
   default-language:    Haskell2010
 
 executable cs-bi-exe
@@ -32,7 +34,9 @@ executable cs-bi-exe
                      , MissingH
                      , bytestring
                      , containers
-                     , regex-compat-tdfa
+                     , regex-pcre
+                     , regex-base
+                     , array
   default-language:    Haskell2010
 
 test-suite cs-bi-test
