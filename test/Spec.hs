@@ -10,12 +10,14 @@ import Lib
             kMersHistogram,
             histogramMax,
             mostFrequentKMers,
+            frequentKMers,
             compliment,
             reverseCompliment,
             patternToNumber,
             numberToPattern,
             frequencyArray,
-            patternPositions
+            patternPositions,
+            findClumps,
          )
 
 
@@ -89,6 +91,14 @@ main = hspec $ do
          m `shouldBe` (3 :: Int)
 
 
+   describe "frequentKMers" $ do
+      it "returns the list of k-mers with a frequency bigger then t" $ do
+         let text = "aactctatacctcctttttgtcgaatttgtgtgatttatagagaaaatcttattaactgaaactaaaatggtaggtttggtggtaggttttgtgtacattttgtagtatctgatttttaattacataccgtatattgtattaaattgacgaacaattgcatggaattgaatatatgcaaaacaaacctaccaccaaactctgtattgaccattttaggacaacttcagggtggtaggtttctgaagctctcatcaatagactattttagtctttacaaacaatattaccgttcagattcaagattctacaacgctgttttaatgggcgttgcagaaaacttaccacctaaaatccagtatccaagccgatttcagagaaacctaccacttacctaccacttacctaccacccgggtggtaagttgcagacattattaaaaacctcatcagaagcttgttcaaaaatttcaatactcgaaacctaccacctgcgtcccctattatttactactactaataatagcagtataattgatctga"
+         let k = 9
+         let t = 3
+         let mfk = frequentKMers text k t
+         mfk `shouldBe` (["aaacctacc","aacctacca","acctaccac","cctaccacc","ggtaggttt","tggtaggtt"] :: [[Char]])
+
    describe "mostFrequentKMers" $ do
       it "returns the list of most frequenct k-mers in the text" $ do
          let text = "ACGTTGCATGTCGCATGATGCATGAGAGCT"
@@ -141,3 +151,22 @@ main = hspec $ do
        (pp !! 0) `shouldBe` (1 :: Int)
        (pp !! 1) `shouldBe` (3 :: Int)
        (pp !! 2) `shouldBe` (9 :: Int)
+
+   describe "findClumps" $ do
+     it "should find the k-mer clumps in the text using L window length and t frequecy" $ do
+       let text = "CGGACTCGACAGATGTGAAGAACGACAATGTGAAGACTCGACACGACAGAGTGAAGAGAAGAGGAAACATTGTAA"
+       let k = 5
+       let l = 50
+       let t = 4
+       let c = findClumps text k l t
+       (length c) `shouldBe` (2 :: Int)
+       c `shouldBe` (["CGACA","GAAGA"] :: [[Char]])
+
+     it "should process a sazable file and produce the clumps array" $ do
+       text <- readFile "./test/fixtures/clump_finding"
+       let k = 11
+       let l = 566
+       let t = 18
+       let c = findClumps text k l t
+       (length c) `shouldBe` (1 :: Int)
+       c `shouldBe` (["AAACCAGGTGG"] :: [[Char]])

@@ -15,7 +15,8 @@ module Lib
       expand,
       frequencyArray,
       patternPositions,
-      showArray
+      showArray,
+      findClumps
     ) where
 
 import Data.String.Utils
@@ -143,3 +144,6 @@ patternPositions' text pattern acc pos
 
 patternPositions :: [Char] -> [Char] -> [Int]
 patternPositions text pattern = map (\i -> fst i) (getAllMatches $ (text =~ ("(?=("++pattern++")).") :: AllMatches [] (MatchOffset, MatchLength)))
+
+findClumps :: [Char] -> Int -> Int -> Int -> [[Char]]
+findClumps text k l t = frequentKMers text k t
