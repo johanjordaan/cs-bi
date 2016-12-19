@@ -16,13 +16,18 @@ module Lib
       frequencyArray,
       patternPositions,
       showArray,
-      findClumps
+      findClumps,
+      skew,
+      minSkewIndices,
+      hammingDistance,
+      approximatePatternPositions
     ) where
 
 import Data.String.Utils
 import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.Map as M
 
+import Data.List
 import Data.List (intercalate)
 
 import Data.Array
@@ -147,3 +152,42 @@ patternPositions text pattern = map (\i -> fst i) (getAllMatches $ (text =~ ("(?
 
 findClumps :: [Char] -> Int -> Int -> Int -> [[Char]]
 findClumps text k l t = frequentKMers text k t
+
+skew' :: [Char] -> [Int] -> [Int]
+skew' [] acc = reverse acc
+skew' (x:xs) acc
+  | x == 'G' = skew' xs ((head acc + 1):acc)
+  | x == 'C' = skew' xs ((head acc - 1):acc)
+  | otherwise = skew' xs ((head acc ):acc)
+
+skew :: [Char] -> [Int]
+skew t = skew' t [0]
+
+minSkewIndices'' :: [Int] -> Int -> [Int]
+minSkewIndices'' s m = findIndices (\i -> i == m) s
+
+minSkewIndices' :: [Int] -> [Int]
+minSkewIndices' s = minSkewIndices'' s (minimum s)
+
+minSkewIndices :: [Char] -> [Int]
+minSkewIndices t = minSkewIndices' (skew t)
+
+hammingDistance' :: [Char] -> [Char] -> Int -> Int
+hammingDistance' [] (y:ys) acc = hammingDistance' [] ys (acc + 1)
+hammingDistance' (x:xs) [] acc = hammingDistance' xs [] (acc + 1)
+hammingDistance' [] [] acc = acc
+hammingDistance' (x:xs) (y:ys) acc
+  | x /= y = hammingDistance' xs ys (acc + 1)
+  | otherwise = hammingDistance' xs ys acc
+
+hammingDistance :: [Char] -> [Char] -> Int
+hammingDistance a b = hammingDistance' a b 0
+
+approximatePatternPositions' :: [Char] -> [Char] -> Int -> [Int] -> Int -> [Int]
+approximatePatternPositions' _ [] _ acc _ = reverse acc
+approximatePatternPositions' p (x:xs) d acc pos
+  | hammingDistance (take (length p) (x:xs)) p <= d = approximatePatternPositions' p xs d (pos:acc) (pos+1)
+  | otherwise = approximatePatternPositions' p xs d acc (pos+1)
+
+approximatePatternPositions :: [Char] -> [Char] -> Int -> [Int]
+approximatePatternPositions p t d = approximatePatternPositions' p t d [] 0
