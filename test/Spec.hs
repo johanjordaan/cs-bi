@@ -21,7 +21,8 @@ import Lib
             skew,
             minSkewIndices,
             hammingDistance,
-            approximatePatternPositions
+            approximatePatternPositions,
+            approximatePatternCount
          )
 
 
@@ -207,3 +208,11 @@ main = hspec $ do
       let d = 3
       let app = approximatePatternPositions p t d
       app `shouldBe` ([6,7,26,27] :: [Int])
+
+  describe "approximatePatternCount" $ do
+    it "should return the number of approximate (hamming distance d) pattern matches in the genome" $ do
+      let p = "ATTCTGGA"
+      let t = "CGCCCGAATCCAGAACGCATTCCCATATTTCGGGACCACTGGCCTCCACGGTACGGACGTCAATCAAAT"
+      let d = 3
+      let apc = approximatePatternCount p t d
+      apc `shouldBe` (4 :: Int)

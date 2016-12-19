@@ -20,7 +20,8 @@ module Lib
       skew,
       minSkewIndices,
       hammingDistance,
-      approximatePatternPositions
+      approximatePatternPositions,
+      approximatePatternCount
     ) where
 
 import Data.String.Utils
@@ -183,6 +184,8 @@ hammingDistance' (x:xs) (y:ys) acc
 hammingDistance :: [Char] -> [Char] -> Int
 hammingDistance a b = hammingDistance' a b 0
 
+-- TODO : Make this more efficent by not calcing the hamming distance
+-- each time but doing a running hamming count.Can this be done??
 approximatePatternPositions' :: [Char] -> [Char] -> Int -> [Int] -> Int -> [Int]
 approximatePatternPositions' _ [] _ acc _ = reverse acc
 approximatePatternPositions' p (x:xs) d acc pos
@@ -191,3 +194,6 @@ approximatePatternPositions' p (x:xs) d acc pos
 
 approximatePatternPositions :: [Char] -> [Char] -> Int -> [Int]
 approximatePatternPositions p t d = approximatePatternPositions' p t d [] 0
+
+approximatePatternCount :: [Char] -> [Char] -> Int -> Int
+approximatePatternCount p t d = length $ approximatePatternPositions p t d
