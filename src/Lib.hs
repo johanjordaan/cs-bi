@@ -21,7 +21,8 @@ module Lib
       minSkewIndices,
       hammingDistance,
       approximatePatternPositions,
-      approximatePatternCount
+      approximatePatternCount --,
+      --neighbors
     ) where
 
 import Data.String.Utils
@@ -197,3 +198,14 @@ approximatePatternPositions p t d = approximatePatternPositions' p t d [] 0
 
 approximatePatternCount :: [Char] -> [Char] -> Int -> Int
 approximatePatternCount p t d = length $ approximatePatternPositions p t d
+
+nucleotidePrepend :: [Char] -> [Char] -> [Char] -> Int  -> [[Char]]
+nucleotidePrepend op p t d
+  | (hammingDistance p t) < d = map (\i -> i:t) ['A','C','G','T']  --
+  | otherwise = [(head op) : t]
+
+neighbors :: [Char] -> Int -> [[Char]]
+neighbors p 0 = [p]
+neighbors p d
+  | length p == 1 = ["A","C","G","T"]
+  | otherwise = concat $ map (\i -> nucleotidePrepend p (tail p) i d ) (neighbors (tail p) d)

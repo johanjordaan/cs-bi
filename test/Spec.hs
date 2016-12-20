@@ -22,7 +22,8 @@ import Lib
             minSkewIndices,
             hammingDistance,
             approximatePatternPositions,
-            approximatePatternCount
+            approximatePatternCount,
+            neighbors
          )
 
 
@@ -216,3 +217,10 @@ main = hspec $ do
       let d = 3
       let apc = approximatePatternCount p t d
       apc `shouldBe` (4 :: Int)
+
+  decribe "neighbors" $ do
+    it "should return the d neighbors of pattern" $ do
+      let p = "ACG"
+      let d = 1
+      let n = neighbors p d
+      n `shouldBe` (["CCG","TCG","GCG","AAG","ATG","AGG","ACA","ACC","ACT","ACG"] :: [[Char]])
