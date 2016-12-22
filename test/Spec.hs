@@ -26,9 +26,33 @@ import Lib
             neighbors
          )
 
+import BiLib
+  (
+    withinHammingDistance
+  )
 
 main :: IO ()
 main = hspec $ do
+  describe "withinHammingDistance" $ do
+    it "return true if the distance between the strings is less or equal to the hamming distance provided" $ do
+      let a = "AAA"
+      let b = "ABA"
+      (withinHammingDistance 1 a b) `shouldBe` (True :: Bool)
+
+    it "return false if the distance between the strings is less or equal to the hamming distance provided" $ do
+      let a = "BAB"
+      let b = "ABA"
+      (withinHammingDistance 1 a b) `shouldBe` (False :: Bool)
+
+
+
+      --let m = M.fromList [("AAA",1),("ABB",2),("AAC",5)]
+      --let m2 = M.insertWith (+) "CCC" 1 m
+
+      --let keys = M.keys m2
+      --print keys
+
+main2 = hspec $ do
   describe "patterCount" $ do
     it "returns the number of occurences of the pattern in the text" $ do
       let pattern = "GCG"
@@ -218,7 +242,7 @@ main = hspec $ do
       let apc = approximatePatternCount p t d
       apc `shouldBe` (4 :: Int)
 
-  decribe "neighbors" $ do
+  describe "neighbors" $ do
     it "should return the d neighbors of pattern" $ do
       let p = "ACG"
       let d = 1

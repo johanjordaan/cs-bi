@@ -6,6 +6,7 @@ module Lib
       splitIntoKMers,
       histogramMax,
       kMersHistogram,
+      kMerHistogram,
       mostFrequentKMers,
       frequentKMers,
       compliment,
@@ -21,8 +22,8 @@ module Lib
       minSkewIndices,
       hammingDistance,
       approximatePatternPositions,
-      approximatePatternCount --,
-      --neighbors
+      approximatePatternCount,
+      neighbors
     ) where
 
 import Data.String.Utils
@@ -50,7 +51,7 @@ patternCount :: [Char] -> [Char] -> Int
 patternCount pattern text = patternCount' pattern text 0
 
 increment :: [Char] -> (M.Map [Char] Int) -> (M.Map [Char] Int)
-increment k m = M.insert k ((M.findWithDefault 0 k m ) +1) m
+increment k m = M.insertWith (+) k 1 m
 
 histogram' :: [[Char]] -> (M.Map [Char] Int) -> (M.Map [Char] Int)
 histogram' [] m = m
@@ -59,17 +60,44 @@ histogram' (x:xs) m = histogram' xs (increment x m)
 histogram :: [[Char]] -> (M.Map [Char] Int)
 histogram l = histogram' l M.empty
 
-drop' k text = C.unpack $ C.drop (fromIntegral k) $ C.pack text
-take' k text = C.unpack $ C.take (fromIntegral k) $ C.pack text
-
 splitIntoKMers' :: [Char] -> Int -> [[Char]] -> [[Char]]
-splitIntoKMers' [] k r = r
+splitIntoKMers' [] k r = reverse r
 splitIntoKMers' text k r
-   | length text < k = r
-   | otherwise = splitIntoKMers' (drop' 1 text) k (r ++ [(take' k text)])
+   | length text < k = reverse r
+   | otherwise = splitIntoKMers' (drop 1 text) k ((take k text):r)
 
 splitIntoKMers :: [Char] -> Int -> [[Char]]
 splitIntoKMers text k = splitIntoKMers' text k []
+
+
+kMerHistogram' :: [Char] -> Int -> (M.Map [Char] Int) -> Int -> Int -> (M.Map [Char] Int)
+kMerHistogram' [] k acc pos stop = acc
+kMerHistogram' text k acc pos stop
+   | pos >= stop = acc
+   | otherwise = kMerHistogram' (drop 1 text) k (increment (take k text) acc) (pos+1) stop
+
+kMerHistogram :: [Char] -> Int -> (M.Map [Char] Int)
+kMerHistogram text k = kMerHistogram' text k M.empty 0 ((length text) - k)
+
+----------------------
+test' :: [Char] -> Int -> Int -> Int
+test' [] k i = i
+test' text k i
+   | length text < k = i
+   | otherwise = test' (drop 1 text) k (i+1)
+
+test :: [Char] -> Int -> Int
+test text k = test' text k 0
+
+length' :: [Char] -> Int -> Int
+length' [] i = i
+length' text i
+  | length text < 1 = i
+  | otherwise = length' (drop 1 text) (i+1)
+
+
+
+--------------------------
 
 pickMax' :: Int -> Int -> Int
 pickMax' a b
@@ -146,8 +174,8 @@ frequencyArray text k = M.elems $ histogram' (splitIntoKMers text k) (expand k)
 patternPositions' :: [Char] -> [Char] -> [Int] -> Int -> [Int]
 patternPositions' text pattern acc pos
   | (length text) < (length pattern) = reverse acc
-  | take (length pattern) text == pattern = patternPositions' (drop' 1 text) pattern (pos:acc) (pos+1)
-  | otherwise = patternPositions' (drop' 1 text) pattern acc (pos+1)
+  | take (length pattern) text == pattern = patternPositions' (drop 1 text) pattern (pos:acc) (pos+1)
+  | otherwise = patternPositions' (drop 1 text) pattern acc (pos+1)
 
 patternPositions :: [Char] -> [Char] -> [Int]
 patternPositions text pattern = map (\i -> fst i) (getAllMatches $ (text =~ ("(?=("++pattern++")).") :: AllMatches [] (MatchOffset, MatchLength)))
