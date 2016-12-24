@@ -23,26 +23,27 @@ import Lib
             hammingDistance,
             approximatePatternPositions,
             approximatePatternCount,
-            neighbors
+            neighbors,
+            frequentWordsWithMismatches
          )
 
-import BiLib
-  (
-    withinHammingDistance
-  )
+--import BiLib
+--  (
+--    withinHammingDistance
+--  )
 
 main :: IO ()
-main = hspec $ do
-  describe "withinHammingDistance" $ do
-    it "return true if the distance between the strings is less or equal to the hamming distance provided" $ do
-      let a = "AAA"
-      let b = "ABA"
-      (withinHammingDistance 1 a b) `shouldBe` (True :: Bool)
-
-    it "return false if the distance between the strings is less or equal to the hamming distance provided" $ do
-      let a = "BAB"
-      let b = "ABA"
-      (withinHammingDistance 1 a b) `shouldBe` (False :: Bool)
+--main = hspec $ do
+--  describe "withinHammingDistance" $ do
+--    it "return true if the distance between the strings is less or equal to the hamming distance provided" $ do
+--      let a = "AAA"
+--      let b = "ABA"
+--      (withinHammingDistance 1 a b) `shouldBe` (True :: Bool)
+--
+--    it "return false if the distance between the strings is less or equal to the hamming distance provided" $ do
+--      let a = "BAB"
+--      let b = "ABA"
+--      (withinHammingDistance 1 a b) `shouldBe` (False :: Bool)
 
 
 
@@ -52,7 +53,7 @@ main = hspec $ do
       --let keys = M.keys m2
       --print keys
 
-main2 = hspec $ do
+main = hspec $ do
   describe "patterCount" $ do
     it "returns the number of occurences of the pattern in the text" $ do
       let pattern = "GCG"
@@ -178,24 +179,24 @@ main2 = hspec $ do
       (pp !! 1) `shouldBe` (3 :: Int)
       (pp !! 2) `shouldBe` (9 :: Int)
 
-  describe "findClumps" $ do
-    it "should find the k-mer clumps in the text using L window length and t frequecy" $ do
-      let text = "CGGACTCGACAGATGTGAAGAACGACAATGTGAAGACTCGACACGACAGAGTGAAGAGAAGAGGAAACATTGTAA"
-      let k = 5
-      let l = 50
-      let t = 4
-      let c = findClumps text k l t
-      (length c) `shouldBe` (2 :: Int)
-      c `shouldBe` (["CGACA","GAAGA"] :: [[Char]])
-
-    it "should process a sizable file and produce the clumps array" $ do
-      text <- readFile "./test/fixtures/clump_finding"
-      let k = 11
-      let l = 566
-      let t = 18
-      let c = findClumps text k l t
-      (length c) `shouldBe` (1 :: Int)
-      c `shouldBe` (["AAACCAGGTGG"] :: [[Char]])
+  --describe "findClumps" $ do
+  --  it "should find the k-mer clumps in the text using L window length and t frequecy" $ do
+  --    let text = "CGGACTCGACAGATGTGAAGAACGACAATGTGAAGACTCGACACGACAGAGTGAAGAGAAGAGGAAACATTGTAA"
+  --    let k = 5
+  --    let l = 50
+  --    let t = 4
+  --    let c = findClumps text k l t
+  --    (length c) `shouldBe` (2 :: Int)
+  --    c `shouldBe` (["CGACA","GAAGA"] :: [[Char]])
+  --
+  --  it "should process a sizable file and produce the clumps array" $ do
+  --    text <- readFile "./test/fixtures/clump_finding"
+  --    let k = 11
+  --    let l = 566
+  --    let t = 18
+  --    let c = findClumps text k l t
+  --    (length c) `shouldBe` (1 :: Int)
+  --    c `shouldBe` (["AAACCAGGTGG"] :: [[Char]])
 
   describe "skew" $ do
     it "should return the skew of a small genome" $ do
@@ -242,9 +243,17 @@ main2 = hspec $ do
       let apc = approximatePatternCount p t d
       apc `shouldBe` (4 :: Int)
 
-  describe "neighbors" $ do
-    it "should return the d neighbors of pattern" $ do
-      let p = "ACG"
+  --describe "neighbors" $ do
+  --  it "should return the d neighbors of pattern" $ do
+  --    let p = "ACG"
+  --    let d = 1
+  --    let n = neighbors p d
+  --    n `shouldBe` (["CCG","TCG","GCG","AAG","ATG","AGG","ACA","ACC","ACT","ACG"] :: [[Char]])
+
+  describe "frequentWordsWithMismatches" $ do
+    it "should include kmers that do not actually appear in the text" $ do
+      let t = "AAAAAAAAAA"
+      let k = 2
       let d = 1
-      let n = neighbors p d
-      n `shouldBe` (["CCG","TCG","GCG","AAG","ATG","AGG","ACA","ACC","ACT","ACG"] :: [[Char]])
+      let r = frequentWordsWithMismatches t k d
+      r `shouldBe` (["AA","AC","AG","CA","AT","GA","TA"] :: [[Char]])

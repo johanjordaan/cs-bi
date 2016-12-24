@@ -23,13 +23,15 @@ module Lib
       hammingDistance,
       approximatePatternPositions,
       approximatePatternCount,
-      neighbors
+      neighbors,
+      frequentWordsWithMismatches
     ) where
 
 import Data.String.Utils
 import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.Map as M
 import qualified Data.Sequence as S
+import qualified Data.Foldable as F
 
 import Data.List
 import Data.List (intercalate)
@@ -117,7 +119,6 @@ mostFrequentKMers text k = M.keys $ M.filter (\v -> v == (histogramMax $ kMersHi
 frequentKMers ::  [Char] -> Int -> Int -> [[Char]]
 frequentKMers text k m = M.keys $ M.filter (\v -> v >= m ) (kMersHistogram text k)
 
-
 complimentOne :: Char -> [Char]
 complimentOne x
   | x == 'A' = "T"
@@ -132,38 +133,9 @@ compliment (x:xs) =  complimentOne x ++ compliment xs
 reverseCompliment :: [Char] ->[Char]
 reverseCompliment s = reverse $ compliment s
 
-patternToNumber' :: [Char] -> Int -> Int -> Int
-patternToNumber' [] _ _ = 0
-patternToNumber' (x:[]) k c
-  | x == 'A' = 4^(k-c) * 0
-  | x == 'T' = 4^(k-c) * 1
-  | x == 'G' = 4^(k-c) * 2
-  | x == 'C' = 4^(k-c) * 3
-patternToNumber' (x:xs) k c = (patternToNumber' [x] k c) + (patternToNumber' xs k (c-1))
-
-patternToNumber :: [Char] -> Int
-patternToNumber p = patternToNumber' p (length p) ((length p)-1)
-
-numberToPattern'' :: Integer -> Char
-numberToPattern'' n
-  | n == 0 = 'A'
-  | n == 1 = 'C'
-  | n == 2 = 'G'
-  | n == 3 = 'T'
-
-numberToPattern' :: Integer -> Int -> Int -> [Char]
-numberToPattern' n k i
-  | k==i = [numberToPattern'' n]
-  | otherwise =
-      [numberToPattern'' $ toInteger $ floor (fromIntegral n/ fromIntegral 4^(k-i))]
-      ++ numberToPattern' (fromIntegral n `mod` fromIntegral 4^(k-i)) k (i+1)
-
-numberToPattern :: Integer -> Int -> [Char]
-numberToPattern n k = numberToPattern' n k 1
-
-expand' ::  Integer -> Int -> (M.Map [Char] Int) -> (M.Map [Char] Int)
+expand' ::  Int -> Int -> (M.Map [Char] Int) -> (M.Map [Char] Int)
 expand' n k m
-  | n == toInteger 4^k-1 = M.insert (numberToPattern n k) 0 m
+  | n == 4^k-1 = M.insert (numberToPattern n k) 0 m
   | otherwise = M.insert (numberToPattern n k) 0 (expand' (n+1) k m)
 
 expand :: Int -> (M.Map [Char] Int)
@@ -230,6 +202,39 @@ approximatePatternCount p t d = length $ approximatePatternPositions p t d
 
 
 --------------------
+-- TODO: Define a dictionary of characters ATCG
+patternToNumber' :: [Char] -> Int -> Int -> Int
+patternToNumber' [] _ _ = 0
+patternToNumber' (x:[]) k c
+  | x == 'A' = 4^(k-c) * 0
+  | x == 'T' = 4^(k-c) * 1
+  | x == 'G' = 4^(k-c) * 2
+  | x == 'C' = 4^(k-c) * 3
+patternToNumber' (x:xs) k c = (patternToNumber' [x] k c) + (patternToNumber' xs k (c-1))
+
+patternToNumber :: [Char] -> Int
+patternToNumber p = round $ (patternToNumber' p (length p) ((length p)-1))/4
+
+numberToPattern'' :: Integer -> Char
+numberToPattern'' n
+  | n == 0 = 'A'
+  | n == 1 = 'T'
+  | n == 2 = 'G'
+  | n == 3 = 'C'
+  | otherwise = (show n) !! 0
+
+numberToPattern' :: Integer -> Int -> Int -> [Char]
+numberToPattern' n k i
+  | k==i = []
+  | otherwise =
+      [numberToPattern'' $ toInteger $ floor (fromIntegral n/ fromIntegral 4^(k-i))]
+      ++ numberToPattern' (fromIntegral n `mod` fromIntegral 4^(k-i)) k (i+1)
+
+numberToPattern :: Int -> Int -> [Char]
+numberToPattern n k = numberToPattern' (fromIntegral (n*4)) k 0
+
+
+
 nucleotidePrepend :: [Char] -> [Char] -> [Char] -> Int  -> [[Char]]
 nucleotidePrepend op p t d
   | (hammingDistance p t) < d = map (\i -> i:t) ['A','C','G','T']  --
@@ -241,34 +246,32 @@ neighbors p d
   | length p == 1 = ["A","C","G","T"]
   | otherwise = concat $ map (\i -> nucleotidePrepend p (tail p) i d ) (neighbors (tail p) d)
 
-initLookup :: Int -> S.Seq (Int)
-initLookup k = S.fromList $ [0..(floor (4**fromIntegral(k))) - 1]
+initLookup :: Int -> S.Seq Int
+initLookup k = S.fromList $ map (\i->0) [0..(floor (4**fromIntegral(k))) - 1]
 
-maxInLookup :: S.Seq (Int) -> Int
+maxInLookup :: S.Seq Int -> Int
 maxInLookup l = foldl (\a b -> if b>a then b else a) 0 l
 
-updateCloseWithNeighbors :: S.Seq (Int) -> [Char] -> Int -> S.Seq (Int)
+updateCloseWithNeighbors :: S.Seq Int -> [Char] -> Int -> S.Seq Int
 updateCloseWithNeighbors close text d =
   foldl
-    (\a i -> S.update (patternToNumber i) 1 a)
+    (\a i -> S.update (patternToNumber i) (S.index a (patternToNumber i)) a)
     close
     (neighbors text d)
 
-frequentWordsWithMismatches' :: [Char] -> Int -> Int -> Int -> S.Seq (Int) -> S.Seq (Int) -> [[Char]]
-frequentWordsWithMismatches' text k d cnt close fa
-  | cnt == 0 =
-      S.mapWithIndex
-        (\i t -> numberToPattern t)
-        (
-          S.filter
-            (\i -> i == (maxInLookup fa))
-            fa
-        )
+extractFrequentWords :: Int -> [Int] -> Int -> [[Char]] -> [[Char]]
+extractFrequentWords _ [] _ acc = reverse acc
+extractFrequentWords cutoff (l:ls) k acc
+  | l >= cutoff = extractFrequentWords cutoff ls k ((numberToPattern l k):acc)
+  | otherwise = extractFrequentWords cutoff ls k acc
+
+frequentWordsWithMismatches' :: [Char] -> Int -> Int -> Int -> S.Seq Int -> [[Char]]
+frequentWordsWithMismatches' text k d cnt close
+  | cnt == 0 = extractFrequentWords (maxInLookup close) (F.toList close) k []
   | otherwise = frequentWordsWithMismatches'
       (drop 1 text) k d
       (cnt - 1)
       (updateCloseWithNeighbors close (take k text) d)
-      fa
 
 frequentWordsWithMismatches :: [Char] -> Int -> Int ->[[Char]]
 frequentWordsWithMismatches text k d =
@@ -276,4 +279,3 @@ frequentWordsWithMismatches text k d =
     text k d
     ((length text) - k) -- End position
     (initLookup k)      -- Close
-    (initLookup k)      -- FrequencyArray
