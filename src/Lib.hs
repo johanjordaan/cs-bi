@@ -29,6 +29,7 @@ module Lib
 import Data.String.Utils
 import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.Map as M
+import qualified Data.Sequence as S
 
 import Data.List
 import Data.List (intercalate)
@@ -227,6 +228,8 @@ approximatePatternPositions p t d = approximatePatternPositions' p t d [] 0
 approximatePatternCount :: [Char] -> [Char] -> Int -> Int
 approximatePatternCount p t d = length $ approximatePatternPositions p t d
 
+
+--------------------
 nucleotidePrepend :: [Char] -> [Char] -> [Char] -> Int  -> [[Char]]
 nucleotidePrepend op p t d
   | (hammingDistance p t) < d = map (\i -> i:t) ['A','C','G','T']  --
@@ -237,3 +240,40 @@ neighbors p 0 = [p]
 neighbors p d
   | length p == 1 = ["A","C","G","T"]
   | otherwise = concat $ map (\i -> nucleotidePrepend p (tail p) i d ) (neighbors (tail p) d)
+
+initLookup :: Int -> S.Seq (Int)
+initLookup k = S.fromList $ [0..(floor (4**fromIntegral(k))) - 1]
+
+maxInLookup :: S.Seq (Int) -> Int
+maxInLookup l = foldl (\a b -> if b>a then b else a) 0 l
+
+updateCloseWithNeighbors :: S.Seq (Int) -> [Char] -> Int -> S.Seq (Int)
+updateCloseWithNeighbors close text d =
+  foldl
+    (\a i -> S.update (patternToNumber i) 1 a)
+    close
+    (neighbors text d)
+
+frequentWordsWithMismatches' :: [Char] -> Int -> Int -> Int -> S.Seq (Int) -> S.Seq (Int) -> [[Char]]
+frequentWordsWithMismatches' text k d cnt close fa
+  | cnt == 0 =
+      S.mapWithIndex
+        (\i t -> numberToPattern t)
+        (
+          S.filter
+            (\i -> i == (maxInLookup fa))
+            fa
+        )
+  | otherwise = frequentWordsWithMismatches'
+      (drop 1 text) k d
+      (cnt - 1)
+      (updateCloseWithNeighbors close (take k text) d)
+      fa
+
+frequentWordsWithMismatches :: [Char] -> Int -> Int ->[[Char]]
+frequentWordsWithMismatches text k d =
+  frequentWordsWithMismatches'
+    text k d
+    ((length text) - k) -- End position
+    (initLookup k)      -- Close
+    (initLookup k)      -- FrequencyArray

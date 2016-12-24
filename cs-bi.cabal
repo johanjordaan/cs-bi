@@ -1,13 +1,13 @@
 name:                cs-bi
 version:             0.1.0.0
-synopsis:            Initial project template from stack
+synopsis:            Bio Informatics Routines
 description:         Please see README.md
-homepage:            https://github.com/githubuser/cs-bi#readme
-license:             BSD3
+homepage:            https://github.com/johanjordaan/cs-bi#readme
+license:             MIT
 license-file:        LICENSE
-author:              Author name here
+author:              Johan Jordaan
 maintainer:          example@example.com
-copyright:           2016 Author name here
+copyright:           2016 Johan Jordaan
 category:            Web
 build-type:          Simple
 extra-source-files:  README.md
