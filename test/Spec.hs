@@ -307,3 +307,10 @@ main = hspec $ do
       let dna = "ATTGC"
       let h = dnaFreqHistogram dna
       h `shouldBe` (S.fromList [('A',1/5),('T',2/5),('C',1/5),('G',1/5)] :: S.Seq (Char,Float))
+
+  describe "scoreMotives" $ do
+    it "should score the motives using the entropy measure" $ do
+      let motifs = ["TCGGGGGTTTTT","CCGGTGACTTAC","ACGGGGATTTTC","TTGGGGACTTTT","AAGGGGACTTCC",
+                    "TTGGGGACTTCC","TCGGGGATTCAT","TCGGGGATTCCT","TAGGGGAACTAC","TCGGGTATAACC"]
+      let s = scoreMotives motifs
+      s `shouldBe` (9.91629 :: Float)

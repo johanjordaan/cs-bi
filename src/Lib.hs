@@ -34,7 +34,9 @@ module Lib
       containsPatternWithMismatch,
       motifEnumeration,
       dnaHistogram,
-      dnaFreqHistogram
+      dnaFreqHistogram,
+      entropy,
+      scoreMotives
     ) where
 
 import Data.String.Utils
@@ -43,6 +45,8 @@ import qualified Data.Map as M
 import qualified Data.Sequence as S
 import qualified Data.Foldable as F
 import qualified Data.Set as DS
+import qualified Data.List as L
+
 
 import Data.List
 import Data.List (intercalate)
@@ -336,7 +340,6 @@ motifEnumeration dna k d =
     []
     (allKMerNeighbors (unifyKMers dna k) d)
 
--- Assume all strings have the sam length
 dnaHistogramUpdate :: Char -> S.Seq (Char,Int) -> S.Seq (Char,Int)
 dnaHistogramUpdate 'A' acc = S.update 0 ('A',(snd $ S.index acc 0) +1) acc
 dnaHistogramUpdate 'T' acc = S.update 1 ('T',(snd $ S.index acc 1) +1) acc
@@ -356,3 +359,21 @@ dnaFreqHistogram dna =
     (\a i -> (fst i,(fromIntegral $ snd i)/(fromIntegral $ length dna)) S.<| a )
     (S.fromList [])
     (S.reverse $ dnaHistogram dna)
+
+entropy :: [Char] -> Float
+entropy c =
+  foldl
+    (\a i -> a +
+      if    (snd i) /= 0
+      then  (-1 * (snd i)) * (log (snd i)) / (log 2)
+      else  0
+    )
+    0
+    (dnaFreqHistogram c)
+
+scoreMotives :: [[Char]] -> Float
+scoreMotives motives =
+  foldl
+    (\a i -> a + (entropy i))
+    0
+    (L.transpose motives)
