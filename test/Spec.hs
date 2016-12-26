@@ -1,31 +1,11 @@
 import Test.Hspec
 import Control.Exception (evaluate)
 import qualified Data.Map as M
+import qualified Data.List as L
+import qualified Data.Sequence as S
+
 import Lib
-         (
-            patternCount,
-            increment,
-            histogram,
-            splitIntoKMers,
-            kMersHistogram,
-            histogramMax,
-            mostFrequentKMers,
-            frequentKMers,
-            compliment,
-            reverseCompliment,
-            patternToNumber,
-            numberToPattern,
-            frequencyArray,
-            patternPositions,
-            findClumps,
-            skew,
-            minSkewIndices,
-            hammingDistance,
-            approximatePatternPositions,
-            approximatePatternCount,
-            neighbors,
-            frequentWordsWithMismatches
-         )
+
 
 --import BiLib
 --  (
@@ -152,11 +132,11 @@ main = hspec $ do
     it "should return the number for the pattern" $ do
       let p = "ATGCAA"
       let n = patternToNumber p
-      n `shouldBe` (912 :: Int)
+      n `shouldBe` (228 :: Int)
 
   describe "numberToPattern" $ do
     it "should return the pattern given the number and k" $ do
-      let n = 912
+      let n = 228
       let k = 6
       let p = numberToPattern n k
       p `shouldBe` ("ATGCAA" :: [Char])
@@ -250,10 +230,80 @@ main = hspec $ do
   --    let n = neighbors p d
   --    n `shouldBe` (["CCG","TCG","GCG","AAG","ATG","AGG","ACA","ACC","ACT","ACG"] :: [[Char]])
 
-  describe "frequentWordsWithMismatches" $ do
-    it "should include kmers that do not actually appear in the text" $ do
-      let t = "AAAAAAAAAA"
-      let k = 2
+  --describe "frequentWordsWithMismatches" $ do
+  --  it "should include kmers that do not actually appear in the text" $ do
+  --    let t = "AAAAAAAAAA"
+  --    let k = 2
+  --    let d = 1
+  --    let r = frequentWordsWithMismatches t k d
+  --    r `shouldBe` (["AA","AC","AG","CA","AT","GA","TA"] :: [[Char]])
+
+
+  describe "removeDuplicates" $ do
+    it "should remove any duplicates in the list" $ do
+      let l = ["AAA","BB","AAA","CC","BB"]
+      let ul = removeDuplicates l
+      ul `shouldBe` (["AAA","BB","CC"] :: [[Char]])
+
+
+  describe "allKMers" $ do
+    it "should extract all the kemsrs in a list of dna sequences into a single string list" $ do
+      let l = ["AAA","TTT","GGG","ATG"]
+      let al = L.sort $ allKMers l 2
+      al `shouldBe` (L.sort $ [["AA"],["TT"],["GG"],["AT","TG"]] :: [[[Char]]])
+
+  describe "unifyKMers" $ do
+    it "should create the union of the kmers arrays" $ do
+      let l = ["AAA","TTT","GGG","ATG"]
+      let al = L.sort $ unifyKMers l 2
+      al `shouldBe` (L.sort $ ["AA","TT","GG","AT","TG"] :: [[Char]])
+
+  describe "allKMerNeighbors" $ do
+    it "should construct a new list that contains all the neighbors of all the kmers" $ do
+      let l = ["AA"]
+      let anl = L.sort $ allKMerNeighbors l 1
+      anl `shouldBe` (L.sort $ (neighbors "AA" 1) :: [[Char]])
+
+    it "should construct a new list that contains all the neighbors of all the kmers" $ do
+      let l = ["A","T"]
+      let anl = L.sort $ allKMerNeighbors l 1
+      anl `shouldBe` (L.sort $ removeDuplicates $ (neighbors "A" 1)++(neighbors "T" 1) :: [[Char]])
+
+    it "should construct a new list that contains all the neighbors of all the kmers" $ do
+      let l = ["ATA","TTG"]
+      let anl = L.sort $ allKMerNeighbors l 1
+      anl `shouldBe` (L.sort $ removeDuplicates $ (neighbors "ATA" 1)++(neighbors "TTG" 1) :: [[Char]])
+
+  describe "containsPatternWithMismatch" $ do
+    it "should detect that a pattern is in a list with mismatches" $ do
+      let l = ["AAA","TTT"]
+      let p = "ATA"
+      let r = containsPatternWithMismatch p l 1
+      r `shouldBe` (True :: Bool)
+
+    it "should detect that a pattern is not in a list with mismatches" $ do
+      let l = ["AAA","TTT"]
+      let p = "AGG"
+      let r = containsPatternWithMismatch p l 1
+      r `shouldBe` (False :: Bool)
+
+
+  describe "motifEnumeration" $ do
+    it "should find the motif" $ do
+      let dna = ["ATTTGGC","TGCCTTA","CGGTATC","GAAAATT"]
+      let k = 3
       let d = 1
-      let r = frequentWordsWithMismatches t k d
-      r `shouldBe` (["AA","AC","AG","CA","AT","GA","TA"] :: [[Char]])
+      let m = motifEnumeration dna k d
+      m `shouldBe` (["ATA","ATT","GTT","TTT"] :: [[Char]])
+
+  describe "dnaHistogram" $ do
+    it "should construct a histogram from the dna string" $ do
+      let dna = "ATTGC"
+      let h = dnaHistogram dna
+      h `shouldBe` (S.fromList [('A',1),('T',2),('C',1),('G',1)] :: S.Seq (Char,Int))
+
+  describe "dnaFreqHistogram" $ do
+    it "should construct a frequency histogram from the dna string" $ do
+      let dna = "ATTGC"
+      let h = dnaFreqHistogram dna
+      h `shouldBe` (S.fromList [('A',1/5),('T',2/5),('C',1/5),('G',1/5)] :: S.Seq (Char,Float))

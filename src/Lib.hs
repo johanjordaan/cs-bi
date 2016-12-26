@@ -24,7 +24,17 @@ module Lib
       approximatePatternPositions,
       approximatePatternCount,
       neighbors,
-      frequentWordsWithMismatches
+      frequentWordsWithMismatches,
+
+      --
+      removeDuplicates,
+      allKMers,
+      unifyKMers,
+      allKMerNeighbors,
+      containsPatternWithMismatch,
+      motifEnumeration,
+      dnaHistogram,
+      dnaFreqHistogram
     ) where
 
 import Data.String.Utils
@@ -32,6 +42,7 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import qualified Data.Map as M
 import qualified Data.Sequence as S
 import qualified Data.Foldable as F
+import qualified Data.Set as DS
 
 import Data.List
 import Data.List (intercalate)
@@ -213,7 +224,7 @@ patternToNumber' (x:[]) k c
 patternToNumber' (x:xs) k c = (patternToNumber' [x] k c) + (patternToNumber' xs k (c-1))
 
 patternToNumber :: [Char] -> Int
-patternToNumber p = round $ (patternToNumber' p (length p) ((length p)-1))/4
+patternToNumber p = round $ (fromIntegral (patternToNumber' p (length p) ((length p)-1))) / 4
 
 numberToPattern'' :: Integer -> Char
 numberToPattern'' n
@@ -227,13 +238,11 @@ numberToPattern' :: Integer -> Int -> Int -> [Char]
 numberToPattern' n k i
   | k==i = []
   | otherwise =
-      [numberToPattern'' $ toInteger $ floor (fromIntegral n/ fromIntegral 4^(k-i))]
-      ++ numberToPattern' (fromIntegral n `mod` fromIntegral 4^(k-i)) k (i+1)
+      (numberToPattern'' $ toInteger $ floor (fromIntegral n/ fromIntegral 4^(k-i)))
+      : (numberToPattern' (fromIntegral n `mod` fromIntegral 4^(k-i)) k (i+1))
 
 numberToPattern :: Int -> Int -> [Char]
-numberToPattern n k = numberToPattern' (fromIntegral (n*4)) k 0
-
-
+numberToPattern n k = reverse $ numberToPattern' (fromIntegral (n*4)) k 0
 
 nucleotidePrepend :: [Char] -> [Char] -> [Char] -> Int  -> [[Char]]
 nucleotidePrepend op p t d
@@ -255,19 +264,19 @@ maxInLookup l = foldl (\a b -> if b>a then b else a) 0 l
 updateCloseWithNeighbors :: S.Seq Int -> [Char] -> Int -> S.Seq Int
 updateCloseWithNeighbors close text d =
   foldl
-    (\a i -> S.update (patternToNumber i) (S.index a (patternToNumber i)) a)
+    (\a i -> S.update (patternToNumber i) (S.index a (patternToNumber i)+1) a)
     close
-    (neighbors text d)
+    ((neighbors text d) ++ (neighbors (reverseCompliment text) d))
 
-extractFrequentWords :: Int -> [Int] -> Int -> [[Char]] -> [[Char]]
-extractFrequentWords _ [] _ acc = reverse acc
-extractFrequentWords cutoff (l:ls) k acc
-  | l >= cutoff = extractFrequentWords cutoff ls k ((numberToPattern l k):acc)
-  | otherwise = extractFrequentWords cutoff ls k acc
+extractFrequentWords :: Int -> [Int] -> Int -> Int -> [[Char]] -> [[Char]]
+extractFrequentWords _ [] _ _ acc = reverse acc
+extractFrequentWords cutoff (l:ls) k i acc
+  | l >= cutoff = extractFrequentWords cutoff ls k (i+1) ((numberToPattern i k):acc)
+  | otherwise = extractFrequentWords cutoff ls k (i+1)acc
 
 frequentWordsWithMismatches' :: [Char] -> Int -> Int -> Int -> S.Seq Int -> [[Char]]
 frequentWordsWithMismatches' text k d cnt close
-  | cnt == 0 = extractFrequentWords (maxInLookup close) (F.toList close) k []
+  | cnt == 0 = extractFrequentWords (maxInLookup close) (F.toList close) k 0 []
   | otherwise = frequentWordsWithMismatches'
       (drop 1 text) k d
       (cnt - 1)
@@ -279,3 +288,71 @@ frequentWordsWithMismatches text k d =
     text k d
     ((length text) - k) -- End position
     (initLookup k)      -- Close
+
+-- Very inefficient - Dont use ...
+removeDuplicates :: [[Char]] -> [[Char]]
+removeDuplicates l = DS.toList $ DS.fromList l
+
+allKMers :: [[Char]] -> Int -> [[[Char]]]
+allKMers l k = map (\a -> removeDuplicates $ splitIntoKMers a k) l
+
+unifyKMers :: [[Char]] -> Int -> [[Char]]
+unifyKMers l k =
+  removeDuplicates $ foldl
+    (\a i -> i ++ a)
+    []
+    (allKMers l k)
+
+allKMerNeighbors :: [[Char]] -> Int -> [[Char]]
+allKMerNeighbors l d =
+  removeDuplicates $ foldl
+    (\a i -> i ++ a)
+    []
+    (map (\a -> neighbors a d) l)
+
+containsPatternWithMismatch :: [Char] -> [[Char]] -> Int -> Bool
+containsPatternWithMismatch p l d =
+  foldl
+    (\a i ->
+      a || (hammingDistance i p) <= d
+    )
+    False
+    l
+
+motifEnumeration :: [[Char]] -> Int -> Int -> [[Char]]
+motifEnumeration dna k d =
+  removeDuplicates $ foldl
+    (\a pattern' ->
+      if
+        foldl
+          (\aa l -> aa && (containsPatternWithMismatch pattern' l d))
+          True
+          (allKMers dna k)   -- by dna
+      then
+        pattern':a
+      else
+        a
+    )
+    []
+    (allKMerNeighbors (unifyKMers dna k) d)
+
+-- Assume all strings have the sam length
+dnaHistogramUpdate :: Char -> S.Seq (Char,Int) -> S.Seq (Char,Int)
+dnaHistogramUpdate 'A' acc = S.update 0 ('A',(snd $ S.index acc 0) +1) acc
+dnaHistogramUpdate 'T' acc = S.update 1 ('T',(snd $ S.index acc 1) +1) acc
+dnaHistogramUpdate 'C' acc = S.update 2 ('C',(snd $ S.index acc 2) +1) acc
+dnaHistogramUpdate 'G' acc = S.update 3 ('G',(snd $ S.index acc 3) +1) acc
+
+dnaHistogram' :: [Char] -> S.Seq (Char,Int) -> S.Seq (Char,Int)
+dnaHistogram' [] acc = acc
+dnaHistogram' (n:ns) acc = dnaHistogram' ns (dnaHistogramUpdate n acc)
+
+dnaHistogram :: [Char] -> S.Seq (Char,Int)
+dnaHistogram dna = dnaHistogram' dna (S.fromList [('A',0),('T',0),('C',0),('G',0)])
+
+dnaFreqHistogram :: [Char] -> S.Seq (Char,Float)
+dnaFreqHistogram dna =
+  foldl
+    (\a i -> (fst i,(fromIntegral $ snd i)/(fromIntegral $ length dna)) S.<| a )
+    (S.fromList [])
+    (S.reverse $ dnaHistogram dna)
