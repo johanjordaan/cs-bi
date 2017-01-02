@@ -222,20 +222,22 @@ patternToNumber' :: [Char] -> Int -> Int -> Int
 patternToNumber' [] _ _ = 0
 patternToNumber' (x:[]) k c
   | x == 'A' = 4^(k-c) * 0
-  | x == 'T' = 4^(k-c) * 1
+  | x == 'C' = 4^(k-c) * 1
   | x == 'G' = 4^(k-c) * 2
-  | x == 'C' = 4^(k-c) * 3
+  | x == 'T' = 4^(k-c) * 3
 patternToNumber' (x:xs) k c = (patternToNumber' [x] k c) + (patternToNumber' xs k (c-1))
 
 patternToNumber :: [Char] -> Int
-patternToNumber p = round $ (fromIntegral (patternToNumber' p (length p) ((length p)-1))) / 4
+patternToNumber p = round $ (fromIntegral (patternToNumber' (reverse p) (length p) ((length p)-1))) / 4
+
+
 
 numberToPattern'' :: Integer -> Char
 numberToPattern'' n
   | n == 0 = 'A'
-  | n == 1 = 'T'
+  | n == 1 = 'C'
   | n == 2 = 'G'
-  | n == 3 = 'C'
+  | n == 3 = 'T'
   | otherwise = (show n) !! 0
 
 numberToPattern' :: Integer -> Int -> Int -> [Char]
@@ -246,7 +248,7 @@ numberToPattern' n k i
       : (numberToPattern' (fromIntegral n `mod` fromIntegral 4^(k-i)) k (i+1))
 
 numberToPattern :: Int -> Int -> [Char]
-numberToPattern n k = reverse $ numberToPattern' (fromIntegral (n*4)) k 0
+numberToPattern n k = numberToPattern' (fromIntegral (n*4)) k 0
 
 nucleotidePrepend :: [Char] -> [Char] -> [Char] -> Int  -> [[Char]]
 nucleotidePrepend op p t d

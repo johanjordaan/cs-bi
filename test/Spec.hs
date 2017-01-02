@@ -132,11 +132,11 @@ main = hspec $ do
     it "should return the number for the pattern" $ do
       let p = "ATGCAA"
       let n = patternToNumber p
-      n `shouldBe` (228 :: Int)
+      n `shouldBe` (912 :: Int)
 
   describe "numberToPattern" $ do
     it "should return the pattern given the number and k" $ do
-      let n = 228
+      let n = 912
       let k = 6
       let p = numberToPattern n k
       p `shouldBe` ("ATGCAA" :: [Char])
