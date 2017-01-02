@@ -1,2 +1,6 @@
 .stack-work
 *.prof
+
+*.o
+*.hi
+bin
